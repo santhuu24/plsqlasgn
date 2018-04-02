@@ -1,0 +1,91 @@
+1)
+DECLARE
+V_Sample1 NUMBER(2);// It won't give any error
+V_Sample2 CONSTANT NUMBER(2) ;//it gives error as constant variable is not assigned to any value 
+V_Sample3 NUMBER(2) NOT NULL ;// it gives error as not null variable should be assigned to a value 
+V_Sample4 NUMBER(2) := 50;// It won't give any error
+V_Sample5 NUMBER(2) DEFAULT 25;// It won't give any error
+
+
+2)
+DECLARE --outer block
+	var_num1 NUMBER := 5;
+BEGIN
+	DECLARE --inner block
+		var_num2 NUMBER := 10;
+	BEGIN
+		DBMS_OUTPUT.PUT_LINE('Inner Value for var_num2:' ||var_num2);
+		DBMS_OUTPUT.PUT_LINE('Inner Value for var_num1:' ||var_num1);
+
+	END;
+	DBMS_OUTPUT.PUT_LINE('Outer Value for var_num1:' ||var_num1);
+	DBMS_OUTPUT.PUT_LINE('Outer Value for var_num2:' ||var_num2);
+END;
+
+
+3)
+declare
+   emprow emp%rowtype;
+BEGIN
+	SELECT * into emprow FROM EMP WHERE EMPNO = 7369;
+	DBMS_OUTPUT.PUT_LINE('empno is:'||emprow.empno);
+  	DBMS_OUTPUT.PUT_LINE('ename is:'||emprow.ename);
+  	DBMS_OUTPUT.PUT_LINE('job is:'||emprow.job);
+	DBMS_OUTPUT.PUT_LINE('mgr is:'||emprow.mgr);
+  	DBMS_OUTPUT.PUT_LINE('sal is:'||emprow.sal);
+  	DBMS_OUTPUT.PUT_LINE('comm is:'||emprow.comm);
+	DBMS_OUTPUT.PUT_LINE('Deptno is:'||emprow.deptno);
+end;
+
+4)
+   
+       DECLARE
+        name varchar2(10); 
+        v_name emp.ename%type;
+        v_empno emp.empno%type;
+        v_job   emp.job%type;
+        v_mgr   emp.mgr%type;
+        v_hiredate emp.hiredate%type;
+        v_sal   emp.sal%type;
+        v_comm  emp.comm%type;
+        v_deptno emp.deptno%type;
+        v_deptname  department_master.dept_name%type;
+ BEGIN
+    v_name:=&name;
+    select s.empno, s.job, s.mgr, s.hiredate, s.sal, s.comm, s.deptno, d.dept_name 
+    into V_empno, v_job, v_mgr, v_hiredate, v_sal, v_comm, v_deptno, v_deptname
+    from emp s , department_master d where s.deptno=d.dept_code and ename =v_name;
+      dbms_output.put_line('emp name'||name);
+         dbms_output.put_line('emp no'||v_empno);
+         dbms_output.put_line('job'||v_job);
+         dbms_output.put_line('mgr'||v_mgr);    
+         dbms_output.put_line('hiredate'||v_hiredate);
+         dbms_output.put_line('salary'||v_sal);
+         dbms_output.put_line('comm'||v_comm);
+         dbms_output.put_line('deptno'||v_deptno);
+         dbms_output.put_line('deptname'||v_deptname);
+  EXCEPTION when no_data_found then
+      dbms_output.put_line('employee not found');
+   
+ end;
+
+----------------------------------------------------------------------
+5)
+    
+    declare 
+       cursor emp_cursor is
+      select ename, min(sal) from emp where deptno = &deptno for update;
+      v_sal emp.sal%type;
+      begin
+        open emp_cursor;
+        loop
+           fetch emp_cursor into v_sal;
+         exit when emp_cursor%notfound;
+       if v_sal*0.3<5000 then
+         update emp set sal = 1.3*sal where current of emp_cursor;
+       else
+         update emp set sal = sal + 5000 where current of emp_cursor;
+        end if;
+        end loop;
+        close emp_cursor;
+       end;

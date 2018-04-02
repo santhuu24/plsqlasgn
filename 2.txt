@@ -1,0 +1,72 @@
+1)
+DECLARE
+	v_sal   NUMBER;
+	v_bonus	NUMBER;
+	CURSOR sal_cursors IS
+					SELECT staff_sal
+					FROM staff_masters
+					WHERE mgr_code=100006;
+BEGIN
+	OPEN sal_cursors;
+	LOOP
+		FETCH sal_cursors INTO v_sal;
+		EXIT WHEN sal_cursors%NOTFOUND;
+		v_bonus := 2 * v_sal;
+		DBMS_OUTPUT.PUT_LINE('Staff Salary is '||v_sal);
+		DBMS_OUTPUT.PUT_LINE('Staff Bonus is '||v_bonus);
+	END LOOP;
+	CLOSE sal_cursors;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('GIVEN CODE IS NOT VALID.ENTER VALID CODE');
+END;
+/
+---------------------------------------------
+
+
+2)
+DECLARE
+	v_sal   NUMBER;
+	v_bonus	NUMBER;
+	CURSOR sal_cursors IS
+					SELECT staff_sal
+					FROM staff_masters
+					WHERE mgr_code=100006;
+BEGIN
+	OPEN sal_cursors;
+	LOOP
+		FETCH sal_cursors INTO v_sal;
+		EXIT WHEN sal_cursors%NOTFOUND;
+		v_bonus := 2 * v_sal;
+		DBMS_OUTPUT.PUT_LINE('Staff Salary is '||v_sal);
+		DBMS_OUTPUT.PUT_LINE('Staff Bonus is '||v_bonus);
+	END LOOP;
+	CLOSE sal_cursors;
+
+END;
+/
+
+
+---------------------------------------------------------------
+
+3)
+DECLARE
+	e_comm    emp.comm%TYPE;
+	errmsg    EXCEPTION;
+BEGIN
+	SELECT Comm
+	INTO e_comm
+	FROM emp
+	WHERE Empno = 7369;
+ 
+	IF e_comm IS NULL
+	THEN
+		RAISE errmsg;
+	END IF;
+ 
+	DBMS_OUTPUT.PUT_LINE('Commission is '||e_comm);
+EXCEPTION
+	WHEN errmsg THEN
+		DBMS_OUTPUT.PUT_LINE('No Commission exists');
+END;
+/

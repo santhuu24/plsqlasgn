@@ -1,0 +1,137 @@
+1)
+create or replace function gettheage(dob date) return number is v_your_age number(3, 1);
+begin
+v_your_age := floor(months_between(sysdate, dob))/12;
+return v_your_age;
+end;
+/
+
+--calling function
+begin
+dbms_output.put_line('your age is' || gettheage(to_date('10/11/2015','dd/mm/yyyy')));
+end;
+/
+
+--------------------------------------------------------------
+2)
+create or replace procedure mgrofstaff
+(SNo in staff_masters.staff_code%type,
+SId out staff_masters.staff_code%type,
+SName out staff_masters.staff_name%type,
+DCode out staff_masters.dept_code%type,
+MName out staff_masters.staff_name%type)
+as 
+BEGIN
+    select staff.staff_code,staff.staff_name,staff.dept_code,masters.staff_name as manager into SId,SName,DCode,MName 
+    from  staff_masters staff,staff_masters masters 
+    where staff.mgr_code=masters.staff_code and staff.staff_code = SNo;
+    if(sql%notfound) then
+        raise no_data_found;
+    end if;   
+    exception
+        when no_data_found then
+        dbms_output.put_line('staff code not found');
+end;
+/
+--------------------------------------------------
+3)
+create or replace function CostToComp(code in number) return number
+is
+    sal staff_masters.staff_sal%type;
+    exp number;
+BEGIN
+    select staff_sal,round(months_between(sysdate,hiredate)/12) as EXP into sal, exp from staff_masters where staff_code=code;
+    if exp>4 then
+    sal:=sal+ (0.3*sal)+(0.15*sal)+(0.2*sal)+(0.08*sal);
+    elsif exp between 2 and 4 then
+    sal:=sal+ (0.2*sal)+(0.15*sal)+(0.2*sal)+(0.08*sal);
+    elsif exp between 1 and 2 then
+    sal:=sal+ (0.1*sal)+(0.15*sal)+(0.2*sal)+(0.08*sal);
+    else 
+    sal:=sal+(0.15*sal)+(0.2*sal)+(0.08*sal);
+    end if;
+    return sal;
+end;
+/
+
+
+declare 
+    cal_salary NUMBER;
+begin
+    cal_salary:=CostToComp(&staff_code);
+    dbms_output.put_line(cal_salary);
+END;
+------------------------------------------------------
+4)
+drop table staff_masters_back;
+create table staff_masters_back as(select * from staff_masters);
+create or replace procedure staff_backup(s_code in staff_masters.staff_code%type) is exp number;
+v_sal staff_masters.staff_sal%type;
+BEGIN
+    insert into staff_masters_back(select * from staff_masters where staff_code=s_code);
+    select staff_sal, round(months_between(sysdate,hiredate)/12) 
+	into v_sal, exp from staff_masters where staff_code=s_code; 
+    if v_sal IS NULL THEN
+	RAISE NO_DATA_FOUND; 
+    if exp>5 then
+    	v_sal := (1.25 * v_sal);
+    end if;
+    if exp between 2 and 5 then
+    	v_sal:= (1.20 * v_sal);
+    end if;
+    update staff_masters set staff_sal=v_sal;
+	exception
+	when no_data_found then
+	dbms_output.put_line('No data found');
+end;
+/
+--------------------------------------------------
+5)
+create or replace procedure insertrecords
+(bcode in book_transactions.book_code%type,
+code in number
+)as
+code1 number;
+exc exception;
+doe varchar2(50);
+doe1 date;
+cursor mycur1 is 
+select staff_code from staff_masters where staff_code=code;
+cursor mycur2 is 
+select student_code from student_masters where student_code=code;
+begin 
+select to_char(sysdate+10,'DAY') INTO doe FROM DUAL;
+if(doe='SATURDAY') then
+select (sysdate+12) INTO doe1 FROM DUAL;
+elsif (doe='SUNDAY')then
+select (sysdate+11) INTO doe1 FROM DUAL;
+else
+select (sysdate+10) INTO doe1 FROM DUAL;
+end if;
+open mycur1;
+open mycur2;
+loop
+fetch mycur1 into code1;
+if(mycur1%notfound and mycur1%rowcount=0) then
+fetch mycur2 into code1;
+if(mycur2%notfound and mycur2%rowcount=0) then
+raise exc;
+else
+exit when(mycur2%notfound);
+insert into book_transactions values(bcode,code1,null,sysdate,doe1,null);
+end if; 
+else
+exit when(mycur1%notfound);
+insert into book_transactions values(bcode,null,code1,sysdate,doe1,null);
+end if;
+end loop;
+exception
+when exc then
+dbms_output.put_line('not found');
+end;
+/
+--------------------------------------------
+
+
+
+
